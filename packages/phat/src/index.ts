@@ -4,43 +4,19 @@
 // *** WITH THE PHALA TEAM AT https://discord.gg/5HfmWQNX THANK YOU             ***
 import "@phala/pink-env";
 import { Coders } from "@phala/ethers";
-import { encodeAbiParameters, decodeAbiParameters } from 'viem';
 
 type HexString = `0x${string}`;
-const AirstackQueryMultipliersType = {
-    components: [
-        {
-            name: 'isFollowingTargetMultiplier',
-            type: 'uint8',
-        },
-        {
-            name: 'txCountWithTargetMultiplier',
-            type: 'uint8',
-        },
-        {
-            name: 'hasPrimaryEnsDomainMultiplier',
-            type: 'uint8',
-        },
-        {
-            name: 'hasLensAndFarcasterAccountMultiplier',
-            type: 'uint8',
-        },
-        {
-            name: 'poapsOwnedIrlMultiplier',
-            type: 'uint8',
-        },
-    ],
-    name: 'airstackQueryMultipliers',
-    type: 'tuple',
-};
 
 // eth abi coder
 const uintCoder = new Coders.NumberCoder(32, false, "uint256");
+const uint8Coder = new Coders.NumberCoder(1, false, 'uint8');
 const bytesCoder = new Coders.BytesCoder("bytes");
+const uint8ArrayCoder = new Coders.ArrayCoder(uint8Coder, -1, "uint8[]");
+const addressCoder = new Coders.AddressCoder("address");
 const stringCoder = new Coders.StringCoder("string");
 
-function encodeReply(reply: [number, number, string]): HexString {
-    return Coders.encode([uintCoder, uintCoder, stringCoder], reply) as HexString;
+function encodeReply(reply: [number, number, number]): HexString {
+    return Coders.encode([uintCoder, uintCoder, uintCoder], reply) as HexString;
 }
 
 // Defined in TestLensOracle.sol
@@ -326,39 +302,31 @@ export default function main(request: HexString, secrets: string): HexString {
     console.log(`handle req: ${request}`);
     let requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers;
     try {
-        [requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers] = decodeAbiParameters([
-            { type: 'uint'},
-            { type: 'address' },
-            { type: 'address' },
-            AirstackQueryMultipliersType,
-        ], request);
+        [requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers] = Coders.decode([uintCoder, bytesCoder, addressCoder, uint8ArrayCoder], request);
         console.log(`requestId: ${requestId}`);
         console.log(`encodedTarget: ${encodedAccountId}`);
         console.log(`encodedRequester: ${encodedRequester}`);
         console.log(`encodedAirstackQueryMultipliers: ${encodedAirstackQueryMultipliers}`);
-        //[requestId, encodedAccountId] = Coders.decode([uintCoder, bytesCoder], request);
+        //[requestId, encodedAccountId] = Coders.decode([uintCoder, bytesCoder, addressCoder, bytesArrayCoder], request);
     } catch (error) {
         console.info("Malformed request received");
-        return encodeAbiParameters([{type: 'uint'}, {type: 'uint'}, {type: 'uint'}], [BigInt(TYPE_RESPONSE), BigInt(0), BigInt(0)]);
-        // return encodeReply([TYPE_ERROR, 0, error as string]);
+        return encodeReply([TYPE_ERROR, 0, 0]);
     }
     const profileId = parseProfileId(encodedAccountId as string);
     console.log(`Request received for profile ${profileId}`);
 
     try {
-        fetchAirstackApiStats(secrets, "ipeciura.eth", "betashop.eth");
-        let stats = `hello`;
+        fetchAirstackApiStats(secrets, "betashop.eth", "ipeciura.eth");
+        let stats = 100;
         console.log("response:", [TYPE_RESPONSE, requestId, stats]);
-        return encodeAbiParameters([{type: 'uint'}, {type: 'uint'}, {type: 'uint'}], [BigInt(TYPE_RESPONSE), requestId, BigInt(stats)]);
-        //return encodeReply([TYPE_RESPONSE, requestId, stats]);
+        return encodeReply([TYPE_RESPONSE, requestId, stats]);
     } catch (error) {
         if (error === Error.FailedToFetchData) {
             throw error;
         } else {
             // otherwise tell client we cannot process it
             console.log("error:", [TYPE_ERROR, requestId, error]);
-            return encodeAbiParameters([{type: 'uint'}, {type: 'uint'}, {type: 'uint'}], [BigInt(TYPE_RESPONSE), requestId, BigInt(0)]);
-            //return encodeReply([TYPE_ERROR, requestId, error as string]);
+            return encodeReply([TYPE_ERROR, requestId, 0]);
         }
     }
 }

@@ -42,8 +42,8 @@
     "@phala/pink-env": "^1.0.11",
     "@phala/sdk": "^0.5.3-nightly-20231013",
     "@scale-codec/core": "2.0.1",
-    "viem": "^1.18.0",
     "dedent": "^1.5.1",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "viem": "^1.18.0"
   }
 }

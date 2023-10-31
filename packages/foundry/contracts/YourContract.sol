@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 // Useful for debugging. Remove when deploying to a live network.
 import "forge-std/console.sol";
 import "./PhatRollupAnchor.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
@@ -14,21 +15,13 @@ import "./PhatRollupAnchor.sol";
  * @author BuidlGuidl
  */
 contract YourContract is PhatRollupAnchor {
-    // Types
-    struct AirstackQueryMultipliers {
-        uint8 isFollowingTargetMultiplier;
-        uint8 txCountWithTargetMultiplier;
-        uint8 hasPrimaryEnsDomainMultiplier;
-        uint8 hasLensAndFarcasterAccountMultiplier;
-        uint8 poapsOwnedIrlMultiplier;
-    }
     // State Variables
     address public immutable owner;
     string public greeting = "Building Unstoppable Apps!!!";
     bool public premium = false;
     uint256 public totalCounter = 0;
-    string public airstackRiskScore;
-    mapping(address => AirstackQueryMultipliers) public userAirstackQueryConfigMultipliers;
+    uint256 public airstackRiskScore;
+    mapping(address => uint8[]) public userAirstackQueryConfigMultipliers;
     mapping(address => uint256) public userGreetingCounter;
 
     uint constant TYPE_RESPONSE = 0;
@@ -46,7 +39,7 @@ contract YourContract is PhatRollupAnchor {
     );
     event AirstackQueryConfigMultipliersChange(
         address indexed configSetter,
-        AirstackQueryMultipliers configSettings,
+        uint8[] configSettings,
         bool premium,
         uint256 value
     );
@@ -80,13 +73,16 @@ contract YourContract is PhatRollupAnchor {
         console.logString("Setting new greeting");
         console.logString(_newGreeting);
 
+        address sender = msg.sender;
         greeting = _newGreeting;
         totalCounter += 1;
         userGreetingCounter[msg.sender] += 1;
 
         uint id = nextRequest;
+        string memory target = "ipeciura.eth";
+        uint8[] memory multipliers = userAirstackQueryConfigMultipliers[sender];
         requests[id] = _newGreeting;
-        _pushMessage(abi.encode(id, "ipeciura.eth", msg.sender, userAirstackQueryConfigMultipliers[msg.sender]));
+        _pushMessage(abi.encode(id, target, sender, multipliers));
         nextRequest += 1;
 
         // msg.value: built-in global variable that represents the amount of ether sent with the transaction
@@ -100,9 +96,8 @@ contract YourContract is PhatRollupAnchor {
         emit GreetingChange(msg.sender, _newGreeting, msg.value > 0, 0);
     }
 
-    function setAirstackQueryConfigMultipliers(AirstackQueryMultipliers calldata _airstackQueryMultipliers) public payable {
+    function setAirstackQueryConfigMultipliers(uint8[] calldata _airstackQueryMultipliers) public payable {
         console.logString("Setting new airstack query multipliers");
-        console.logString(_airstackQueryMultipliers);
 
         userAirstackQueryConfigMultipliers[msg.sender] = _airstackQueryMultipliers;
 
@@ -147,6 +142,6 @@ contract YourContract is PhatRollupAnchor {
         }
         emit AirstackRiskScoreReceived(id, requests[id], _airstackRiskScore);
         airstackRiskScore = _airstackRiskScore;
-        greeting = _airstackRiskScore;
+        greeting = Strings.toString(_airstackRiskScore);
     }
 }
