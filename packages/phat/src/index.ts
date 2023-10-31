@@ -4,8 +4,35 @@
 // *** WITH THE PHALA TEAM AT https://discord.gg/5HfmWQNX THANK YOU             ***
 import "@phala/pink-env";
 import { Coders } from "@phala/ethers";
+import { encodeAbiParameters, decodeAbiParameters } from 'viem';
 
-type HexString = `0x${string}`
+type HexString = `0x${string}`;
+const AirstackQueryMultipliersType = {
+    components: [
+        {
+            name: 'isFollowingTargetMultiplier',
+            type: 'uint8',
+        },
+        {
+            name: 'txCountWithTargetMultiplier',
+            type: 'uint8',
+        },
+        {
+            name: 'hasPrimaryEnsDomainMultiplier',
+            type: 'uint8',
+        },
+        {
+            name: 'hasLensAndFarcasterAccountMultiplier',
+            type: 'uint8',
+        },
+        {
+            name: 'poapsOwnedIrlMultiplier',
+            type: 'uint8',
+        },
+    ],
+    name: 'airstackQueryMultipliers',
+    type: 'tuple',
+};
 
 // eth abi coder
 const uintCoder = new Coders.NumberCoder(32, false, "uint256");
@@ -94,9 +121,9 @@ function fetchAirstackApiStats(airstackApi: string, target: string, requester: s
         }`,
     });
     let body0 = stringToHex(queryIsFollowingTarget);
-    let queryTxCountBetweenAccounts = JSON.stringify({
+    let queryTxCountWithTarget = JSON.stringify({
         query: `
-            query GetTxCountBetweenUserAandUserB {
+            query GetTxCountTarget {
               ethereumTransfers: TokenTransfers(
                 input: {
                   filter: {
@@ -143,7 +170,7 @@ function fetchAirstackApiStats(airstackApi: string, target: string, requester: s
               }
             }`
     });
-    let body1 = stringToHex(queryTxCountBetweenAccounts);
+    let body1 = stringToHex(queryTxCountWithTarget);
     let queryHasPrimaryEns = JSON.stringify( {
         query: `
             query MyQuery {
@@ -297,12 +324,23 @@ function parseProfileId(hexx: string): string {
 //
 export default function main(request: HexString, secrets: string): HexString {
     console.log(`handle req: ${request}`);
-    let requestId, encodedAccountId;
+    let requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers;
     try {
-        [requestId, encodedAccountId] = Coders.decode([uintCoder, bytesCoder], request);
+        [requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers] = decodeAbiParameters([
+            { type: 'uint'},
+            { type: 'address' },
+            { type: 'address' },
+            AirstackQueryMultipliersType,
+        ], request);
+        console.log(`requestId: ${requestId}`);
+        console.log(`encodedTarget: ${encodedAccountId}`);
+        console.log(`encodedRequester: ${encodedRequester}`);
+        console.log(`encodedAirstackQueryMultipliers: ${encodedAirstackQueryMultipliers}`);
+        //[requestId, encodedAccountId] = Coders.decode([uintCoder, bytesCoder], request);
     } catch (error) {
         console.info("Malformed request received");
-        return encodeReply([TYPE_ERROR, 0, error as string]);
+        return encodeAbiParameters([{type: 'uint'}, {type: 'uint'}, {type: 'uint'}], [BigInt(TYPE_RESPONSE), BigInt(0), BigInt(0)]);
+        // return encodeReply([TYPE_ERROR, 0, error as string]);
     }
     const profileId = parseProfileId(encodedAccountId as string);
     console.log(`Request received for profile ${profileId}`);
@@ -311,14 +349,16 @@ export default function main(request: HexString, secrets: string): HexString {
         fetchAirstackApiStats(secrets, "ipeciura.eth", "betashop.eth");
         let stats = `hello`;
         console.log("response:", [TYPE_RESPONSE, requestId, stats]);
-        return encodeReply([TYPE_RESPONSE, requestId, stats]);
+        return encodeAbiParameters([{type: 'uint'}, {type: 'uint'}, {type: 'uint'}], [BigInt(TYPE_RESPONSE), requestId, BigInt(stats)]);
+        //return encodeReply([TYPE_RESPONSE, requestId, stats]);
     } catch (error) {
         if (error === Error.FailedToFetchData) {
             throw error;
         } else {
             // otherwise tell client we cannot process it
             console.log("error:", [TYPE_ERROR, requestId, error]);
-            return encodeReply([TYPE_ERROR, requestId, error as string]);
+            return encodeAbiParameters([{type: 'uint'}, {type: 'uint'}, {type: 'uint'}], [BigInt(TYPE_RESPONSE), requestId, BigInt(0)]);
+            //return encodeReply([TYPE_ERROR, requestId, error as string]);
         }
     }
 }

@@ -14,12 +14,21 @@ import "./PhatRollupAnchor.sol";
  * @author BuidlGuidl
  */
 contract YourContract is PhatRollupAnchor {
+    // Types
+    struct AirstackQueryMultipliers {
+        uint8 isFollowingTargetMultiplier;
+        uint8 txCountWithTargetMultiplier;
+        uint8 hasPrimaryEnsDomainMultiplier;
+        uint8 hasLensAndFarcasterAccountMultiplier;
+        uint8 poapsOwnedIrlMultiplier;
+    }
     // State Variables
     address public immutable owner;
     string public greeting = "Building Unstoppable Apps!!!";
     bool public premium = false;
     uint256 public totalCounter = 0;
-    string public airstackApiData;
+    string public airstackRiskScore;
+    mapping(address => AirstackQueryMultipliers) public userAirstackQueryConfigMultipliers;
     mapping(address => uint256) public userGreetingCounter;
 
     uint constant TYPE_RESPONSE = 0;
@@ -35,9 +44,15 @@ contract YourContract is PhatRollupAnchor {
         bool premium,
         uint256 value
     );
-    event ResponseReceived(uint reqId, string greeting, string _airstackApiData);
-    event ErrorReceived(uint reqId, string greeting, string error);
-    event LensApiDataReceived(uint reqid, string greeting, string _airstackApiData);
+    event AirstackQueryConfigMultipliersChange(
+        address indexed configSetter,
+        AirstackQueryMultipliers configSettings,
+        bool premium,
+        uint256 value
+    );
+    event ResponseReceived(uint reqId, string target, uint256 _airstackRiskScore);
+    event ErrorReceived(uint reqId, string target, uint256 error);
+    event AirstackRiskScoreReceived(uint reqid, string target, uint256 _airstackRiskScore);
 
     // Constructor: Called once on contract deployment
     // Check packages/foundry/deploy/Deploy.s.sol
@@ -71,7 +86,7 @@ contract YourContract is PhatRollupAnchor {
 
         uint id = nextRequest;
         requests[id] = _newGreeting;
-        _pushMessage(abi.encode(id, "0x05"));
+        _pushMessage(abi.encode(id, "ipeciura.eth", msg.sender, userAirstackQueryConfigMultipliers[msg.sender]));
         nextRequest += 1;
 
         // msg.value: built-in global variable that represents the amount of ether sent with the transaction
@@ -83,6 +98,20 @@ contract YourContract is PhatRollupAnchor {
 
         // emit: keyword used to trigger an event
         emit GreetingChange(msg.sender, _newGreeting, msg.value > 0, 0);
+    }
+
+    function setAirstackQueryConfigMultipliers(AirstackQueryMultipliers calldata _airstackQueryMultipliers) public payable {
+        console.logString("Setting new airstack query multipliers");
+        console.logString(_airstackQueryMultipliers);
+
+        userAirstackQueryConfigMultipliers[msg.sender] = _airstackQueryMultipliers;
+
+        if (msg.value > 0) {
+            premium = true;
+        } else {
+            premium = false;
+        }
+        emit AirstackQueryConfigMultipliersChange(msg.sender, _airstackQueryMultipliers, msg.value > 0, 0);
     }
 
     /**
@@ -105,19 +134,19 @@ contract YourContract is PhatRollupAnchor {
     function _onMessageReceived(bytes calldata action) internal override {
         // Optional to check length of action
         // require(action.length == 32 * 3, "cannot parse action");
-        (uint respType, uint id, string memory _airstackApiData) = abi.decode(
+        (uint respType, uint id, uint256 _airstackRiskScore) = abi.decode(
             action,
-            (uint, uint, string)
+            (uint, uint, uint256)
         );
         if (respType == TYPE_RESPONSE) {
-            emit ResponseReceived(id, requests[id], _airstackApiData);
+            emit ResponseReceived(id, requests[id], _airstackRiskScore);
             delete requests[id];
         } else if (respType == TYPE_ERROR) {
-            emit ErrorReceived(id, requests[id], "ERROR");
+            emit ErrorReceived(id, requests[id], 0);
             delete requests[id];
         }
-        emit LensApiDataReceived(id, requests[id], _airstackApiData);
-        airstackApiData = _airstackApiData;
-        greeting = _airstackApiData;
+        emit AirstackRiskScoreReceived(id, requests[id], _airstackRiskScore);
+        airstackRiskScore = _airstackRiskScore;
+        greeting = _airstackRiskScore;
     }
 }
