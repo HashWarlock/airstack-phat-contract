@@ -99,49 +99,83 @@ function fetchAirstackApiStats(airstackApi: string, target: string, requester: s
     let body0 = stringToHex(queryIsFollowingTarget);
     let queryTxCountWithTarget = JSON.stringify({
         query: `
-            query GetTxCountTarget {
-              ethereumTransfers: TokenTransfers(
-                input: {
-                  filter: {
-                    _or: [
-                      {
-                        from: { _eq: "${requester}" },
-                        to: { _eq: "${target}" }
-                      },
-                      {
-                        from: { _eq: "${target}" },
-                        to: { _eq: "${requester}" }
-                      }
-                    ]
-                  },
-                  blockchain: ethereum
-                }
+            query GetTokenTransfers {
+              ethereum: TokenTransfers(
+                input: {filter: {from: {_in: ["${requester}"]}, to: {_eq: "${target}"}}, blockchain: ethereum}
               ) {
                 TokenTransfer {
+                  from {
+                    addresses
+                    domains {
+                      name
+                    }
+                    socials {
+                      dappName
+                      profileName
+                      profileTokenId
+                      profileTokenIdHex
+                      userId
+                      userAssociatedAddresses
+                    }
+                  }
+                  to {
+                    addresses
+                    domains {
+                      name
+                    }
+                    socials {
+                      dappName
+                      profileName
+                      profileTokenId
+                      profileTokenIdHex
+                      userId
+                      userAssociatedAddresses
+                    }
+                  }
                   transactionHash
-                  blockchain
+                }
+                pageInfo {
+                  nextCursor
+                  prevCursor
                 }
               }
-              polygonTransfers: TokenTransfers(
-                input: {
-                  filter: {
-                    _or: [
-                      {
-                        from: { _eq: "${requester}" },
-                        to: { _eq: "${target}" }
-                      },
-                      {
-                        from: { _eq: "${target}" },
-                        to: { _eq: "${requester}" }
-                      }
-                    ]
-                  },
-                  blockchain: polygon
-                }
+              polygon: TokenTransfers(
+                input: {filter: {from: {_in: ["${requester}"]}, to: {_eq: "${target}"}}, blockchain: polygon}
               ) {
                 TokenTransfer {
+                  from {
+                    addresses
+                    domains {
+                      name
+                    }
+                    socials {
+                      dappName
+                      profileName
+                      profileTokenId
+                      profileTokenIdHex
+                      userId
+                      userAssociatedAddresses
+                    }
+                  }
+                  to {
+                    addresses
+                    domains {
+                      name
+                    }
+                    socials {
+                      dappName
+                      profileName
+                      profileTokenId
+                      profileTokenIdHex
+                      userId
+                      userAssociatedAddresses
+                    }
+                  }
                   transactionHash
-                  blockchain
+                }
+                pageInfo {
+                  nextCursor
+                  prevCursor
                 }
               }
             }`
