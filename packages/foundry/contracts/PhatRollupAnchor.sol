@@ -67,8 +67,8 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
     event MessageProcessedTo(uint256);
 
     error BadAttestor();
-    error BadCondLen(uint kenLen, uint valueLen);
-    error BadUpdateLen(uint kenLen, uint valueLen);
+    error BadCondLen(uint256 kenLen, uint256 valueLen);
+    error BadUpdateLen(uint256 kenLen, uint256 valueLen);
     error CondNotMet(bytes cond, uint32 expected, uint32 actual);
     error CannotDecodeAction(uint8 actionId);
     error UnsupportedAction(uint8 actionId);
@@ -80,7 +80,7 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
     uint8 constant ACTION_GRANT_ATTESTOR = 10;
     uint8 constant ACTION_REVOKE_ATTESTOR = 11;
 
-    mapping (bytes => bytes) kvStore;
+    mapping(bytes => bytes) kvStore;
 
     /// Triggers a rollup transaction with `eq` conditoin check on uint256 values
     ///
@@ -109,10 +109,11 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
     /// However in case of out-of-gas, the error will not be propagated. It results in a bare
     /// "reverted" in etherscan. It's hard to debug, but you will find the gas is 100% used like
     /// [this tx](https://mumbai.polygonscan.com/tx/0x0abe643ada209ec31a0a6da4fab546b7071e1cf265f3b4681b9bede209c400c9).
-    function metaTxRollupU256CondEq(
-        ForwardRequest calldata req,
-        bytes calldata signature
-    ) public useMetaTx(req, signature) returns (bool) {
+    function metaTxRollupU256CondEq(ForwardRequest calldata req, bytes calldata signature)
+        public
+        useMetaTx(req, signature)
+        returns (bool)
+    {
         if (!hasRole(ATTESTOR_ROLE, req.from)) {
             revert BadAttestor();
         }
@@ -135,7 +136,7 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
         bytes[] calldata updateKeys,
         bytes[] calldata updateValues,
         bytes[] calldata actions
-    ) internal nonReentrant() returns (bool) {
+    ) internal nonReentrant returns (bool) {
         if (condKeys.length != condValues.length) {
             revert BadCondLen(condKeys.length, condValues.length);
         }
@@ -144,7 +145,7 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
         }
 
         // check cond
-        for (uint i = 0; i < condKeys.length; i++) {
+        for (uint256 i = 0; i < condKeys.length; i++) {
             uint32 value = toUint32Strict(kvStore[condKeys[i]]);
             uint32 expected = toUint32Strict(condValues[i]);
             if (value != expected) {
@@ -153,12 +154,12 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
         }
 
         // apply updates
-        for (uint i = 0; i < updateKeys.length; i++) {
+        for (uint256 i = 0; i < updateKeys.length; i++) {
             kvStore[updateKeys[i]] = updateValues[i];
         }
 
         // apply actions
-        for (uint i = 0; i < actions.length; i++) {
+        for (uint256 i = 0; i < actions.length; i++) {
             handleAction(actions[i]);
         }
 
@@ -192,7 +193,7 @@ abstract contract PhatRollupAnchor is ReentrancyGuard, MetaTxReceiver, AccessCon
         }
     }
 
-    function getStorage(bytes memory key) public view returns(bytes memory) {
+    function getStorage(bytes memory key) public view returns (bytes memory) {
         return kvStore[key];
     }
 

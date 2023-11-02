@@ -20,6 +20,15 @@ export const ContractInteraction = () => {
   const [multiplier3, setMultiplier3] = useState<bigint>(BigInt(0));
   const [multiplier4, setMultiplier4] = useState<bigint>(BigInt(0));
 
+  function getActiveMultiplier(index: bigint) {
+      const {data} = useScaffoldContractRead({
+        contractName: "YourContract",
+        functionName: "userAirstackQueryConfigMultipliers",
+        args: [address, index]
+      });
+      return (data) ? BigInt(data) : BigInt(0);
+  }
+
   const { writeAsync: writeAsync0, isLoading: isLoading0 } = useScaffoldContractWrite({
     contractName: "YourContract",
     functionName: "setGreeting",
@@ -74,34 +83,59 @@ export const ContractInteraction = () => {
           <span className="text-4xl sm:text-2xl">Configure Airstack Query Multipliers</span>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
             <div
-                className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
-                data-tip="Requester is Following Target"
+                className="space-x-4 flex tooltip tooltip-bottom tooltip-info before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                data-tip={[`Requester is Following Target`]}
             >
-            <UInt8Input value={multiplier0 ?? 0} onChange={value => setMultiplier0(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              <div
+                  className="space-x-4 flex tooltip tooltip-top tooltip-success before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                  data-tip={[`Current Multiplier ${getActiveMultiplier(BigInt(0))}`]}
+              >
+                <UInt8Input value={multiplier0 ?? 0} onChange={value => setMultiplier0(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              </div>
             </div>
             <div
                 className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
-                data-tip="Request To/From Target TX Count"
+                data-tip="Requester TXs To/From Target Count"
             >
-            <UInt8Input value={multiplier1 ?? 0} onChange={value => setMultiplier1(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              <div
+                  className="space-x-4 flex tooltip tooltip-top tooltip-success before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                  data-tip={[`Current Multiplier ${getActiveMultiplier(BigInt(1))}`]}
+              >
+                <UInt8Input value={multiplier1 ?? 0} onChange={value => setMultiplier1(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              </div>
             </div>
             <div
                 className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
                 data-tip="Target Has Primary ENS Domain"
             >
-            <UInt8Input value={multiplier2 ?? 0} onChange={value => setMultiplier2(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              <div
+                  className="space-x-4 flex tooltip tooltip-top tooltip-success before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                  data-tip={[`Current Multiplier ${getActiveMultiplier(BigInt(2))}`]}
+              >
+                <UInt8Input value={multiplier2 ?? 0} onChange={value => setMultiplier2(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              </div>
             </div>
             <div
                 className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
                 data-tip="Target Has Lens or Farcaster Accounts"
             >
-            <UInt8Input value={multiplier3 ?? 0} onChange={value => setMultiplier3(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              <div
+                  className="space-x-4 flex tooltip tooltip-top tooltip-success before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                  data-tip={[`Current Multiplier ${getActiveMultiplier(BigInt(3))}`]}
+              >
+                <UInt8Input value={multiplier3 ?? 0} onChange={value => setMultiplier3(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              </div>
             </div>
             <div
                 className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
                 data-tip="Target Has POAPs From IRL Events"
             >
-            <UInt8Input value={multiplier4 ?? 0} onChange={value => setMultiplier4(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              <div
+                  className="space-x-4 flex tooltip tooltip-top tooltip-success before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                  data-tip={[`Current Multiplier ${getActiveMultiplier(BigInt(4))}`]}
+              >
+                <UInt8Input value={multiplier4 ?? 0} onChange={value => setMultiplier4(BigInt(value))} variant={IntegerVariant.UINT8}/>
+              </div>
             </div>
           <button
               className="btn btn-primary btn-sm font-normal normal-case gap-1 cursor-auto"

@@ -23,28 +23,20 @@ contract YourContract is PhatRollupAnchor {
     mapping(address => uint8[]) public userAirstackQueryConfigMultipliers;
     mapping(address => uint256) public userGreetingCounter;
 
-    uint constant TYPE_RESPONSE = 0;
-    uint constant TYPE_ERROR = 2;
+    uint256 constant TYPE_RESPONSE = 0;
+    uint256 constant TYPE_ERROR = 2;
 
-    mapping(uint => address) requests;
-    uint nextRequest = 1;
+    mapping(uint256 => address) requests;
+    uint256 nextRequest = 1;
 
     // Events: a way to emit log statements from smart contract that can be listened to by external parties
-    event GreetingChange(
-        address indexed greetingSetter,
-        address newGreeting,
-        bool premium,
-        uint256 value
-    );
+    event GreetingChange(address indexed greetingSetter, address newGreeting, bool premium, uint256 value);
     event AirstackQueryConfigMultipliersChange(
-        address indexed configSetter,
-        uint8[] configSettings,
-        bool premium,
-        uint256 value
+        address indexed configSetter, uint8[] configSettings, bool premium, uint256 value
     );
-    event ResponseReceived(uint reqId, address requester, address target, uint256 _airstackRiskScore);
-    event ErrorReceived(uint reqId, address requester, address target, uint256 error);
-    event AirstackRiskScoreReceived(uint reqid, address requester, address target, uint256 _airstackRiskScore);
+    event ResponseReceived(uint256 reqId, address requester, address target, uint256 _airstackRiskScore);
+    event ErrorReceived(uint256 reqId, address requester, address target, uint256 error);
+    event AirstackRiskScoreReceived(uint256 reqid, address requester, address target, uint256 _airstackRiskScore);
 
     // Constructor: Called once on contract deployment
     // Check packages/foundry/deploy/Deploy.s.sol
@@ -76,7 +68,7 @@ contract YourContract is PhatRollupAnchor {
         totalCounter += 1;
         userGreetingCounter[msg.sender] += 1;
 
-        uint id = nextRequest;
+        uint256 id = nextRequest;
         uint8[] memory multipliers = userAirstackQueryConfigMultipliers[sender];
         requests[id] = _newGreeting;
         _pushMessage(abi.encode(id, _newGreeting, sender, multipliers));
@@ -93,6 +85,10 @@ contract YourContract is PhatRollupAnchor {
         emit GreetingChange(msg.sender, _newGreeting, msg.value > 0, 0);
     }
 
+    /*
+        This function sets the sender's Airstack Query Multipliers used to calculate the
+        risk score in the off-chain Phat Contract.
+    */
     function setAirstackQueryConfigMultipliers(uint8[] calldata _airstackQueryMultipliers) public payable {
         console.logString("Setting new airstack query multipliers");
 
@@ -111,7 +107,7 @@ contract YourContract is PhatRollupAnchor {
      * The function can only be called by the owner of the contract as defined by the isOwner modifier
      */
     function withdraw() public isOwner {
-        (bool success, ) = owner.call{value: address(this).balance}("");
+        (bool success,) = owner.call{value: address(this).balance}("");
         require(success, "Failed to send Ether");
     }
 
@@ -121,15 +117,13 @@ contract YourContract is PhatRollupAnchor {
     receive() external payable {}
 
     /**
-    * Function gets API info off-chain to set counter to the retrieved number
-    */
+     * Function gets API info off-chain to set counter to the retrieved number
+     */
     function _onMessageReceived(bytes calldata action) internal override {
         // Optional to check length of action
         // require(action.length == 32 * 3, "cannot parse action");
-        (uint respType, uint id, address requester, uint256 _airstackRiskScore) = abi.decode(
-            action,
-            (uint, uint, address, uint256)
-        );
+        (uint256 respType, uint256 id, address requester, uint256 _airstackRiskScore) =
+            abi.decode(action, (uint256, uint256, address, uint256));
         if (respType == TYPE_RESPONSE) {
             emit ResponseReceived(id, requester, requests[id], _airstackRiskScore);
             delete requests[id];
