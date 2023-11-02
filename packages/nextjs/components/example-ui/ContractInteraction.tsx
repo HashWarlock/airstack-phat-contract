@@ -1,15 +1,26 @@
-import { useState } from "react";
-import { CopyIcon } from "./assets/CopyIcon";
-import { DiamondIcon } from "./assets/DiamondIcon";
-import { HareIcon } from "./assets/HareIcon";
-import { ArrowSmallRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import {useState} from "react";
+import {CopyIcon} from "./assets/CopyIcon";
+import {DiamondIcon} from "./assets/DiamondIcon";
+import {HareIcon} from "./assets/HareIcon";
+import {ReceiptPercentIcon, XMarkIcon, CalculatorIcon} from "@heroicons/react/24/outline";
+import {useScaffoldContractWrite, useScaffoldContractRead} from "~~/hooks/scaffold-eth";
+import {AddressInput, IntegerVariant} from "~~/components/scaffold-eth";
+import {UInt8Input} from "~~/components/example-ui/Input/UInt8Input";
+import {Address as AddressType} from "abitype/dist/types/abi";
+import { useAccount } from "wagmi";
 
 export const ContractInteraction = () => {
+  const { address } = useAccount();
   const [visible, setVisible] = useState(true);
-  const [newGreeting, setNewGreeting] = useState("");
+  const [newGreeting, setNewGreeting] = useState<AddressType>();
 
-  const { writeAsync, isLoading } = useScaffoldContractWrite({
+  const [multiplier0, setMultiplier0] = useState<bigint>(BigInt(0));
+  const [multiplier1, setMultiplier1] = useState<bigint>(BigInt(0));
+  const [multiplier2, setMultiplier2] = useState<bigint>(BigInt(0));
+  const [multiplier3, setMultiplier3] = useState<bigint>(BigInt(0));
+  const [multiplier4, setMultiplier4] = useState<bigint>(BigInt(0));
+
+  const { writeAsync: writeAsync0, isLoading: isLoading0 } = useScaffoldContractWrite({
     contractName: "YourContract",
     functionName: "setGreeting",
     args: [newGreeting],
@@ -17,6 +28,16 @@ export const ContractInteraction = () => {
     onBlockConfirmation: txnReceipt => {
       console.log("📦 Transaction blockHash", txnReceipt.blockHash);
     },
+  });
+
+  const { writeAsync: writeAirstackMultipliersAsync, isLoading: isAirstackMultipliersLoading } = useScaffoldContractWrite({
+    contractName: "YourContract",
+    functionName: "setAirstackQueryConfigMultipliers",
+    args: [[Number(multiplier0), Number(multiplier1), Number(multiplier2), Number(multiplier3), Number(multiplier4)]],
+    value: "0.01",
+    onBlockConfirmation: txnReceipt => {
+      console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+    }
   });
 
   return (
@@ -49,31 +70,78 @@ export const ContractInteraction = () => {
             <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
+        <div className="flex flex-col mt-2 px-7 py-4 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
+          <span className="text-4xl sm:text-2xl">Configure Airstack Query Multipliers</span>
+          <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
+            <div
+                className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                data-tip="Requester is Following Target"
+            >
+            <UInt8Input value={multiplier0 ?? 0} onChange={value => setMultiplier0(BigInt(value))} variant={IntegerVariant.UINT8}/>
+            </div>
+            <div
+                className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                data-tip="Request To/From Target TX Count"
+            >
+            <UInt8Input value={multiplier1 ?? 0} onChange={value => setMultiplier1(BigInt(value))} variant={IntegerVariant.UINT8}/>
+            </div>
+            <div
+                className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                data-tip="Target Has Primary ENS Domain"
+            >
+            <UInt8Input value={multiplier2 ?? 0} onChange={value => setMultiplier2(BigInt(value))} variant={IntegerVariant.UINT8}/>
+            </div>
+            <div
+                className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                data-tip="Target Has Lens or Farcaster Accounts"
+            >
+            <UInt8Input value={multiplier3 ?? 0} onChange={value => setMultiplier3(BigInt(value))} variant={IntegerVariant.UINT8}/>
+            </div>
+            <div
+                className="space-x-4 flex tooltip tooltip-bottom tooltip-secondary before:content-[attr(data-tip)] before:left-auto before:transform-none"
+                data-tip="Target Has POAPs From IRL Events"
+            >
+            <UInt8Input value={multiplier4 ?? 0} onChange={value => setMultiplier4(BigInt(value))} variant={IntegerVariant.UINT8}/>
+            </div>
+          <button
+              className="btn btn-primary btn-sm font-normal normal-case gap-1 cursor-auto"
+              onClick={() => writeAirstackMultipliersAsync()}
+              disabled={isAirstackMultipliersLoading}>
+            {
+              !isAirstackMultipliersLoading ? (
+                  <CalculatorIcon className="h-6 w-6" />
+              ) : (
+                  <span className="loading loading-spinner loading-sm"></span>
+              )}
+            <span>Set</span>
+          </button>
+          </div>
+          <div className="mt-4 flex gap-2 items-start">
+            <span className="text-sm leading-tight">Price:</span>
+            <div className="badge badge-warning">0.01 ETH + Gas</div>
+          </div>
+        </div>
+        <div className="flex flex-col mt-4 px-7 py-6 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
+          <span className="text-4xl sm:text-2xl">Check an Account's Risk Score</span>
 
-        <div className="flex flex-col mt-6 px-7 py-8 bg-base-200 opacity-80 rounded-2xl shadow-lg border-2 border-primary">
-          <span className="text-4xl sm:text-3xl text-black">Check an Account's Risk Score</span>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
-            <input
-              type="text"
-              placeholder="Request Target Risk Score Here"
-              className="input font-bai-jamjuree w-full px-5 bg-[url('/assets/gradient-bg.png')] bg-[length:100%_100%] border border-primary text-lg sm:text-2xl placeholder-white uppercase"
-              onChange={e => setNewGreeting(e.target.value)}
+          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-5">
+            <AddressInput
+                placeholder="Target Address"
+                value={newGreeting ?? ""}
+                onChange={value => setNewGreeting(value)}
             />
             <div className="flex rounded-full border border-primary p-1 flex-shrink-0">
               <div className="flex rounded-full border-2 border-primary p-1">
                 <button
-                  className="btn btn-primary rounded-full capitalize font-normal font-white w-24 flex items-center gap-1 hover:gap-2 transition-all tracking-widest"
-                  onClick={() => writeAsync()}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <span className="loading loading-spinner loading-sm"></span>
+                    className="btn btn-primary btn-sm capitalize font-normal font-white w-32 flex items-center gap-0.5 hover:gap-2 transition-all tracking-widest"
+                    onClick={() => writeAsync0()}
+                    disabled={isLoading0}>
+                  {!isLoading0 ? (
+                      <ReceiptPercentIcon className="h-6 w-6" />
                   ) : (
-                    <>
-                      Send <ArrowSmallRightIcon className="w-3 h-3 mt-0.5" />
-                    </>
+                      <span className="loading loading-spinner loading-sm"></span>
                   )}
+                  <span>Request</span>
                 </button>
               </div>
             </div>

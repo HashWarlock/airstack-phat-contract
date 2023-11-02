@@ -30,13 +30,18 @@ export const ContractData = () => {
     functionName: "greeting",
   });
 
+  const { data: lastRiskScore, isLoading: isLastRiskScoreLoading} = useScaffoldContractRead({
+    contractName: "YourContract",
+    functionName: "airstackRiskScore",
+  });
+
   useScaffoldEventSubscriber({
     contractName: "YourContract",
     eventName: "GreetingChange",
     listener: logs => {
       logs.map(log => {
         const { greetingSetter, value, premium, newGreeting } = log.args;
-        console.log("📡 GreetingChange event", greetingSetter, value, premium, newGreeting);
+        console.log("📡 New Request for Target's Risk Score event", greetingSetter, value, premium, newGreeting);
       });
     },
   });
@@ -91,10 +96,19 @@ export const ContractData = () => {
             />
           </button>
           <div className="bg-secondary border border-primary rounded-xl flex">
-            <div className="p-2 py-1 border-r border-primary flex items-end">Total count</div>
-            <div className="text-4xl text-right min-w-[3rem] px-2 py-1 flex justify-end font-bai-jamjuree">
+            <div className="p-2 py-1 border-r border-primary flex items-center">Total Risk Score Requests</div>
+            <div className="text-2xl text-right min-w-[3rem] px-2 py-1 flex items-center font-bai-jamjuree">
               {totalCounter?.toString() || "0"}
             </div>
+          </div>
+          <div className="w-16 h-16 relative">
+            <div className="w-16 h-16 left-0 top-0 absolute bg-secondary rounded-full border border-primary"></div>
+            <div className="w-16 h-16 left-0 top-0 absolute">
+              <div className="w-16 h-16 left-0 top-0 absolute bg-secondary rounded-full border border-primary"></div>
+              <div className="w-16 h-16 left-0 top-0 absolute bg-secondary rounded-full"></div>
+            </div>
+            <div className="w-[36.92px] h-[22.15px] left-[14px] top-1 absolute text-center text-xs font-semibold font-bai-jamjuree leading-[18px]">
+              Risk Score&#13; {lastRiskScore?.toString() || "0"}</div>
           </div>
         </div>
 

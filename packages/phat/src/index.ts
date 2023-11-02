@@ -15,8 +15,8 @@ const uint8ArrayCoder = new Coders.ArrayCoder(uint8Coder, -1, "uint8[]");
 const addressCoder = new Coders.AddressCoder("address");
 const stringCoder = new Coders.StringCoder("string");
 
-function encodeReply(reply: [number, number, number]): HexString {
-    return Coders.encode([uintCoder, uintCoder, uintCoder], reply) as HexString;
+function encodeReply(reply: [number, string, number, number]): HexString {
+    return Coders.encode([uintCoder, addressCoder, uintCoder, uintCoder], reply) as HexString;
 }
 
 // Defined in TestLensOracle.sol
@@ -302,7 +302,7 @@ export default function main(request: HexString, secrets: string): HexString {
     console.log(`handle req: ${request}`);
     let requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers;
     try {
-        [requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers] = Coders.decode([uintCoder, bytesCoder, addressCoder, uint8ArrayCoder], request);
+        [requestId, encodedAccountId, encodedRequester, encodedAirstackQueryMultipliers] = Coders.decode([uintCoder, addressCoder, addressCoder, uint8ArrayCoder], request);
         console.log(`requestId: ${requestId}`);
         console.log(`encodedTarget: ${encodedAccountId}`);
         console.log(`encodedRequester: ${encodedRequester}`);
@@ -310,23 +310,21 @@ export default function main(request: HexString, secrets: string): HexString {
         //[requestId, encodedAccountId] = Coders.decode([uintCoder, bytesCoder, addressCoder, bytesArrayCoder], request);
     } catch (error) {
         console.info("Malformed request received");
-        return encodeReply([TYPE_ERROR, 0, 0]);
+        return encodeReply([TYPE_ERROR, encodedRequester, 0, 0]);
     }
-    const profileId = parseProfileId(encodedAccountId as string);
-    console.log(`Request received for profile ${profileId}`);
 
     try {
-        fetchAirstackApiStats(secrets, "betashop.eth", "ipeciura.eth");
-        let stats = 100;
-        console.log("response:", [TYPE_RESPONSE, requestId, stats]);
-        return encodeReply([TYPE_RESPONSE, requestId, stats]);
+        fetchAirstackApiStats(secrets, encodedAccountId, encodedRequester);
+        let stats = 88;
+        console.log("response:", [TYPE_RESPONSE, encodedRequester, requestId, stats]);
+        return encodeReply([TYPE_RESPONSE, encodedRequester, requestId, stats]);
     } catch (error) {
         if (error === Error.FailedToFetchData) {
             throw error;
         } else {
             // otherwise tell client we cannot process it
-            console.log("error:", [TYPE_ERROR, requestId, error]);
-            return encodeReply([TYPE_ERROR, requestId, 0]);
+            console.log("error:", [TYPE_ERROR, encodedRequester, requestId, error]);
+            return encodeReply([TYPE_ERROR, encodedRequester, requestId, 0]);
         }
     }
 }

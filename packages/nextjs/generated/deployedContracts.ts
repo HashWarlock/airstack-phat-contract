@@ -257,9 +257,15 @@ const contracts = {
                 },
                 {
                   indexed: false,
-                  internalType: "string",
+                  internalType: "address",
+                  name: "requester",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "address",
                   name: "target",
-                  type: "string",
+                  type: "address",
                 },
                 {
                   indexed: false,
@@ -288,9 +294,15 @@ const contracts = {
                 },
                 {
                   indexed: false,
-                  internalType: "string",
+                  internalType: "address",
+                  name: "requester",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "address",
                   name: "target",
-                  type: "string",
+                  type: "address",
                 },
                 {
                   indexed: false,
@@ -313,9 +325,9 @@ const contracts = {
                 },
                 {
                   indexed: false,
-                  internalType: "string",
+                  internalType: "address",
                   name: "newGreeting",
-                  type: "string",
+                  type: "address",
                 },
                 {
                   indexed: false,
@@ -382,9 +394,15 @@ const contracts = {
                 },
                 {
                   indexed: false,
-                  internalType: "string",
+                  internalType: "address",
+                  name: "requester",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "address",
                   name: "target",
-                  type: "string",
+                  type: "address",
                 },
                 {
                   indexed: false,
@@ -679,9 +697,9 @@ const contracts = {
               name: "greeting",
               outputs: [
                 {
-                  internalType: "string",
+                  internalType: "address",
                   name: "",
-                  type: "string",
+                  type: "address",
                 },
               ],
               stateMutability: "view",
@@ -1077,9 +1095,9 @@ const contracts = {
             {
               inputs: [
                 {
-                  internalType: "string",
+                  internalType: "address",
                   name: "_newGreeting",
-                  type: "string",
+                  type: "address",
                 },
               ],
               name: "setGreeting",

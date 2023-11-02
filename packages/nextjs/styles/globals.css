@@ -30,3 +30,41 @@ p {
 .btn.btn-ghost {
   @apply shadow-none;
 }
+
+.box {
+  height: 64px;
+  width: 64px;
+}
+
+.box .group {
+  height: 64px;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 66px;
+}
+
+.box .overlap-group {
+  background-size: 100% 100%;
+  border: 4px solid #6fb74e;
+  border-radius: 32px;
+  height: 64px;
+  left: -4px;
+  position: relative;
+  top: -4px;
+  width: 64px;
+}
+
+.box .text-wrapper {
+  color: #59595b;
+  font-family: "Poppins-SemiBold", Helvetica, serif;
+  font-size: 18px;
+  font-weight: 600;
+  left: 10px;
+  letter-spacing: 0;
+  line-height: 18px;
+  position: absolute;
+  text-align: center;
+  top: 17px;
+  width: 37px;
+}

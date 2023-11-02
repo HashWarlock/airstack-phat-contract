@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 // Useful for debugging. Remove when deploying to a live network.
 import "forge-std/console.sol";
 import "./PhatRollupAnchor.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 // Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
 // import "@openzeppelin/contracts/access/Ownable.sol";
@@ -17,7 +16,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract YourContract is PhatRollupAnchor {
     // State Variables
     address public immutable owner;
-    string public greeting = "Building Unstoppable Apps!!!";
+    address public greeting = 0xdE1683287529B9B4C3132af8AaD210644B259CfD;
     bool public premium = false;
     uint256 public totalCounter = 0;
     uint256 public airstackRiskScore;
@@ -27,13 +26,13 @@ contract YourContract is PhatRollupAnchor {
     uint constant TYPE_RESPONSE = 0;
     uint constant TYPE_ERROR = 2;
 
-    mapping(uint => string) requests;
+    mapping(uint => address) requests;
     uint nextRequest = 1;
 
     // Events: a way to emit log statements from smart contract that can be listened to by external parties
     event GreetingChange(
         address indexed greetingSetter,
-        string newGreeting,
+        address newGreeting,
         bool premium,
         uint256 value
     );
@@ -43,9 +42,9 @@ contract YourContract is PhatRollupAnchor {
         bool premium,
         uint256 value
     );
-    event ResponseReceived(uint reqId, string target, uint256 _airstackRiskScore);
-    event ErrorReceived(uint reqId, string target, uint256 error);
-    event AirstackRiskScoreReceived(uint reqid, string target, uint256 _airstackRiskScore);
+    event ResponseReceived(uint reqId, address requester, address target, uint256 _airstackRiskScore);
+    event ErrorReceived(uint reqId, address requester, address target, uint256 error);
+    event AirstackRiskScoreReceived(uint reqid, address requester, address target, uint256 _airstackRiskScore);
 
     // Constructor: Called once on contract deployment
     // Check packages/foundry/deploy/Deploy.s.sol
@@ -67,11 +66,10 @@ contract YourContract is PhatRollupAnchor {
      *
      * @param _newGreeting (string memory) - new greeting to save on the contract
      */
-    function setGreeting(string memory _newGreeting) public payable {
+    function setGreeting(address _newGreeting) public payable {
         // Print data to the anvil chain console. Remove when deploying to a live network.
 
         console.logString("Setting new greeting");
-        console.logString(_newGreeting);
 
         address sender = msg.sender;
         greeting = _newGreeting;
@@ -79,10 +77,9 @@ contract YourContract is PhatRollupAnchor {
         userGreetingCounter[msg.sender] += 1;
 
         uint id = nextRequest;
-        string memory target = "ipeciura.eth";
         uint8[] memory multipliers = userAirstackQueryConfigMultipliers[sender];
         requests[id] = _newGreeting;
-        _pushMessage(abi.encode(id, target, sender, multipliers));
+        _pushMessage(abi.encode(id, _newGreeting, sender, multipliers));
         nextRequest += 1;
 
         // msg.value: built-in global variable that represents the amount of ether sent with the transaction
@@ -129,19 +126,18 @@ contract YourContract is PhatRollupAnchor {
     function _onMessageReceived(bytes calldata action) internal override {
         // Optional to check length of action
         // require(action.length == 32 * 3, "cannot parse action");
-        (uint respType, uint id, uint256 _airstackRiskScore) = abi.decode(
+        (uint respType, uint id, address requester, uint256 _airstackRiskScore) = abi.decode(
             action,
-            (uint, uint, uint256)
+            (uint, uint, address, uint256)
         );
         if (respType == TYPE_RESPONSE) {
-            emit ResponseReceived(id, requests[id], _airstackRiskScore);
+            emit ResponseReceived(id, requester, requests[id], _airstackRiskScore);
             delete requests[id];
         } else if (respType == TYPE_ERROR) {
-            emit ErrorReceived(id, requests[id], 0);
+            emit ErrorReceived(id, requester, requests[id], 0);
             delete requests[id];
         }
-        emit AirstackRiskScoreReceived(id, requests[id], _airstackRiskScore);
+        emit AirstackRiskScoreReceived(id, requester, requests[id], _airstackRiskScore);
         airstackRiskScore = _airstackRiskScore;
-        greeting = Strings.toString(_airstackRiskScore);
     }
 }

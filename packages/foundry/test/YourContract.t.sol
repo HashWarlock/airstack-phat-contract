@@ -13,16 +13,16 @@ contract YourContractTest is Test {
 
     function testMessageOnDeployment() public view {
         require(
-            keccak256(bytes(yourContract.greeting())) ==
-                keccak256("Building Unstoppable Apps!!!")
+            yourContract.greeting() ==
+                0xdE1683287529B9B4C3132af8AaD210644B259CfD
         );
     }
 
     function testSetNewMessage() public {
-        yourContract.setGreeting("Learn Scaffold-ETH 2! :)");
+        yourContract.setGreeting(0x624Fef3390A244a834f19b3dBfddC28939530c17);
         require(
-            keccak256(bytes(yourContract.greeting())) ==
-                keccak256("Learn Scaffold-ETH 2! :)")
+            yourContract.greeting() ==
+            0x624Fef3390A244a834f19b3dBfddC28939530c17
         );
     }
 }
