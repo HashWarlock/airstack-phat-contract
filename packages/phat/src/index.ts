@@ -281,6 +281,7 @@ function fetchAirstackApiStats(airstackApi: string, target: string, requester: s
     const multiplier1Data = helper(response1, 1);
     console.log(multiplier1Data);
     const multiplier2Data = helper(response2, 2);
+    console.log(multiplier2Data);
     const multiplier3Data = helper(response3, 3);
     console.log(multiplier3Data);
     const multiplier4Data = helper(response4, 4);
@@ -302,18 +303,18 @@ function helper(response: any, index: number) {
     if (typeof respBody !== "string") {
         throw Error.FailedToDecode;
     }
-    //console.log(respBody);
+    console.log(respBody);
     return parseResponseBody(JSON.parse(respBody), index);
 }
 
 function parseResponseBody(respBody: any, index: number) {
     if (index == 0) {
-        const followingCount = respBody.data.Wallet.socialFollowings.Following;
+        const followingCount = respBody.data.Wallet.socialFollowings;
         if (followingCount == null) {
             return 0;
         } else {
-            console.log(followingCount.length)
-            return followingCount.length;
+            console.log(followingCount.Following.length)
+            return followingCount.Following.length;
         }
     } else if (index == 1) {
         let totalTokenTransfers = 0;
@@ -391,6 +392,8 @@ function parseProfileId(hexx: string): string {
 
 function calculateScore(queryStatsResults: number[], queryMultipliers: number[]) {
     let score = 0;
+    console.log(queryStatsResults);
+    console.log(queryMultipliers);
     score += ((queryStatsResults[0] * Number(queryMultipliers[0])) + (queryStatsResults[1] * Number(queryMultipliers[1])) + (queryStatsResults[2] * Number(queryMultipliers[2])) + (queryStatsResults[3] * Number(queryMultipliers[3])) + (queryStatsResults[4] * Number(queryMultipliers[4])));
     console.log(score);
     return score;
@@ -427,7 +430,7 @@ export default function main(request: HexString, secrets: string): HexString {
     }
 
     try {
-        const multiplierData = fetchAirstackApiStats(secrets, encodedAccountId, encodedRequester);
+        const multiplierData = fetchAirstackApiStats(secrets, "ipeciura.eth", "betashop.eth");
         let stats = calculateScore(multiplierData, encodedAirstackQueryMultipliers);
         console.log("response:", [TYPE_RESPONSE, encodedRequester, requestId, stats]);
         return encodeReply([TYPE_RESPONSE, encodedRequester, requestId, stats]);
