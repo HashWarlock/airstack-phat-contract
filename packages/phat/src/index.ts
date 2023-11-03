@@ -277,16 +277,19 @@ function fetchAirstackApiStats(airstackApi: string, target: string, requester: s
         10000
     );
 
-    helper(response0);
-    helper(response1);
-    helper(response2);
-    helper(response3);
-    helper(response4);
+    const multiplier0Data = helper(response0, 0);
+    const multiplier1Data = helper(response1, 1);
+    console.log(multiplier1Data);
+    const multiplier2Data = helper(response2, 2);
+    const multiplier3Data = helper(response3, 3);
+    console.log(multiplier3Data);
+    const multiplier4Data = helper(response4, 4);
+    console.log(multiplier4Data);
 
-    //return JSON.parse();
+    return [multiplier0Data, multiplier1Data, multiplier2Data, multiplier3Data, multiplier4Data];
 }
 
-function helper(response: any) {
+function helper(response: any, index: number) {
     if (response.statusCode !== 200) {
         console.log(
             `Fail to read Lens api with status code: ${response.statusCode}, error: ${
@@ -299,8 +302,77 @@ function helper(response: any) {
     if (typeof respBody !== "string") {
         throw Error.FailedToDecode;
     }
-    console.log(respBody);
+    //console.log(respBody);
+    return parseResponseBody(JSON.parse(respBody), index);
+}
 
+function parseResponseBody(respBody: any, index: number) {
+    if (index == 0) {
+        const followingCount = respBody.data.Wallet.socialFollowings.Following;
+        if (followingCount == null) {
+            return 0;
+        } else {
+            console.log(followingCount.length)
+            return followingCount.length;
+        }
+    } else if (index == 1) {
+        let totalTokenTransfers = 0;
+        const totalEthTokenTransfers = respBody.data.ethereum.TokenTransfer;
+        // console.log(totalEthTokenTransfers);
+        if (totalEthTokenTransfers == null) {
+            console.log("null");
+        } else {
+            totalTokenTransfers += totalEthTokenTransfers.length;
+        }
+        const totalPolygonTokenTransfers = respBody.data.polygon.TokenTransfer;
+        //console.log(totalPolygonTokenTransfers)
+        if (totalPolygonTokenTransfers == null) {
+            console.log("null");
+        } else {
+            totalTokenTransfers += totalPolygonTokenTransfers.length;
+        }
+        return totalTokenTransfers;
+    } else if (index == 2) {
+        const hasPrimaryEnsDomain = respBody.data.Domains.Domain;
+        if (hasPrimaryEnsDomain == null) {
+            return 0;
+        } else {
+            const length = hasPrimaryEnsDomain.length;
+            console.log(length);
+            for (let x = 0; x < length; x++) {
+                const data = hasPrimaryEnsDomain[x];
+                if (data.isPrimary == true) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+    } else if (index == 3) {
+        const hasWeb3Social = respBody.data.Socials.Social;
+        if (hasWeb3Social == null) {
+            return 0;
+        } else {
+            return hasWeb3Social.length;
+        }
+    } else if (index == 4) {
+        const hasIrlPoaps = respBody.data.Poaps.Poap;
+        console.log(hasIrlPoaps);
+        if (hasIrlPoaps == null) {
+            return 0;
+        } else {
+            let totalCount = 0;
+            const length = hasIrlPoaps.length;
+            // console.log(length);
+            for (let y = 0; y < length; y++) {
+                const data = hasIrlPoaps[y];
+                //console.log(data.poapEvent.isVirtualEvent);
+                if (data.poapEvent.isVirtualEvent == false) {
+                    totalCount += 1;
+                }
+            }
+            return totalCount;
+        }
+    }
 }
 
 function parseProfileId(hexx: string): string {
@@ -315,6 +387,13 @@ function parseProfileId(hexx: string): string {
         str += ch;
     }
     return str;
+}
+
+function calculateScore(queryStatsResults: number[], queryMultipliers: number[]) {
+    let score = 0;
+    score += ((queryStatsResults[0] * Number(queryMultipliers[0])) + (queryStatsResults[1] * Number(queryMultipliers[1])) + (queryStatsResults[2] * Number(queryMultipliers[2])) + (queryStatsResults[3] * Number(queryMultipliers[3])) + (queryStatsResults[4] * Number(queryMultipliers[4])));
+    console.log(score);
+    return score;
 }
 
 //
@@ -348,8 +427,8 @@ export default function main(request: HexString, secrets: string): HexString {
     }
 
     try {
-        fetchAirstackApiStats(secrets, encodedAccountId, encodedRequester);
-        let stats = 88;
+        const multiplierData = fetchAirstackApiStats(secrets, encodedAccountId, encodedRequester);
+        let stats = calculateScore(multiplierData, encodedAirstackQueryMultipliers);
         console.log("response:", [TYPE_RESPONSE, encodedRequester, requestId, stats]);
         return encodeReply([TYPE_RESPONSE, encodedRequester, requestId, stats]);
     } catch (error) {
