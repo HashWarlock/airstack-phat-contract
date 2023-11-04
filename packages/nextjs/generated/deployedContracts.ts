@@ -613,30 +613,6 @@ const contracts = {
             {
               inputs: [
                 {
-                  internalType: "address",
-                  name: "account",
-                  type: "address",
-                },
-                {
-                  internalType: "uint8",
-                  name: "index",
-                  type: "uint8",
-                },
-              ],
-              name: "getQueryMultiplier",
-              outputs: [
-                {
-                  internalType: "uint8",
-                  name: "",
-                  type: "uint8",
-                },
-              ],
-              stateMutability: "nonpayable",
-              type: "function",
-            },
-            {
-              inputs: [
-                {
                   internalType: "bytes32",
                   name: "role",
                   type: "bytes32",
